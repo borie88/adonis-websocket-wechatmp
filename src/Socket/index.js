@@ -73,7 +73,7 @@ export default class Socket {
     this.emitter.emit('ready', this)
 
     // if (process.env.NODE_ENV !== 'production') {
-      console.log('clearing emit buffer for %s topic after subscription ack', this.topic)
+      console.log(`clearing emit buffer for ${this.topic} topic after subscription ack`)
     // }
 
     /**
@@ -233,7 +233,7 @@ export default class Socket {
   close () {
     this.state = 'closing'
     // if (process.env.NODE_ENV !== 'production') {
-      console.log('closing subscription for %s topic with server', this.topic)
+      console.log(`closing subscription for ${this.topic} topic with server`)
     // }
     this.connection.sendPacket(wsp.leavePacket(this.topic))
   }

@@ -48,7 +48,7 @@ export default class Connection extends Emitter {
     }, options)
 
     if (this.options.env !== 'production') {
-      console.log('connection options %o', this.options)
+      console.log('connection options ', this.options)
     }
 
     /**
@@ -180,7 +180,7 @@ export default class Connection extends Emitter {
 
     if (!socket) {
       if (this.options.env !== 'production') {
-        console.log('cannot consume packet since %s topic has no active subscription %j', packet.d.topic, packet)
+        console.log(`cannot consume packet since ${packet.d.topic} topic has no active subscription ${packet}`)
       }
       return
     }
@@ -212,7 +212,7 @@ export default class Connection extends Emitter {
     this.options.encoder.encode(this._packetsQueue.shift(), (error, payload) => {
       if (error) {
         if (this.options.env !== 'production') {
-          console.log('encode error %j', error)
+          console.log(`encode error ${error}`)
         }
         return
       }
@@ -258,7 +258,7 @@ export default class Connection extends Emitter {
    */
   _onError (event) {
     if (this.options.env !== 'production') {
-      console.log('error %O', event)
+      console.log('error', event)
     }
 
     this._subscriptionsIterator((subscription) => (subscription.serverError()))
@@ -299,7 +299,7 @@ export default class Connection extends Emitter {
    */
   _onClose (event) {
     if (this.options.env !== 'production') {
-      console.log('closing from %s state', this._connectionState)
+      console.log(`closing from ${this._connectionState} state`)
     }
 
     this._cleanup()
@@ -334,7 +334,7 @@ export default class Connection extends Emitter {
     this.options.encoder.decode(event.data, (decodeError, packet) => {
       if (decodeError) {
         if (this.options.env !== 'production') {
-          console.log('packet dropped, decode error %o', decodeError)
+          console.log('packet dropped, decode error', decodeError)
         }
         return
       }
@@ -418,7 +418,7 @@ export default class Connection extends Emitter {
     }
 
     if (this.options.env !== 'production') {
-      console.log('invalid packet type %d', packet.t)
+      console.log(`invalid packet type ${packet.t}`)
     }
   }
 
@@ -450,7 +450,7 @@ export default class Connection extends Emitter {
      * Sending packets to make pending subscriptions
      */
     if (this.options.env !== 'production') {
-      console.log('processing pre connection subscriptions %o', Object.keys(this.subscriptions))
+      console.log(`processing pre connection subscriptions ${Object.keys(this.subscriptions)}`)
     }
 
     this._subscriptionsIterator((subscription) => {
@@ -561,7 +561,7 @@ export default class Connection extends Emitter {
    */
   _sendSubscriptionPacket (topic) {
     if (this.options.env !== 'production') {
-      console.log('initiating subscription for %s topic with server', topic)
+      console.log(`initiating subscription for ${topic} topic with server`)
     }
     this.sendPacket(wsp.joinPacket(topic))
   }
@@ -578,7 +578,7 @@ export default class Connection extends Emitter {
     const url = query ? `${this._url}?${query}` : this._url
 
     if (this.options.env !== 'production') {
-      console.log('creating socket connection on %s url', url)
+      console.log(`creating socket connection on ${url}`)
     }
 
     // Legacy WS implementation
@@ -593,10 +593,11 @@ export default class Connection extends Emitter {
 
     // The new WeChat Websocket implementation >=1.7.0
     this.ws = wx.connectSocket({ url })
-    this.ws.onClose = (event) => this._onClose(event)
-    this.ws.onError = (event) => this._onError(event)
-    this.ws.onOpen = (event) => this._onOpen(event)
-    this.ws.onMessage = (event) => this._onMessage(event)
+    this.ws.onClose((event) => this._onClose(event))
+    this.ws.onError((event) => this._onError(event))
+    this.ws.onOpen((event) => this._onOpen(event))
+    this.ws.onMessage((event) => this._onMessage(event))
+    console.log(this.ws, url)
 
     return this
   }
@@ -611,13 +612,12 @@ export default class Connection extends Emitter {
    * @return {void}
    */
   write (payload) {
-    // Not supported in Mini Programs
-    // if (this.ws.readyState !== window.WebSocket.OPEN) {
-    //   if (this.options.env !== 'production') {
-    //     console.log('connection is not in open state, current state %s', this.ws.readyState)
-    //   }
-    //   return
-    // }
+    if (this.ws.readyState !== this.ws.OPEN) {
+      if (this.options.env !== 'production') {
+        console.log('connection is not in open state, current state %s', this.ws.readyState)
+      }
+      return
+    }
 
     this.ws.send({ data: payload })
   }
@@ -741,7 +741,7 @@ export default class Connection extends Emitter {
     }
 
     if (this.options.env !== 'production') {
-      console.log('sending event on %s topic', topic)
+      console.log(`sending event on ${topic} topic`)
     }
 
     this.sendPacket(wsp.eventPacket(topic, event, data))

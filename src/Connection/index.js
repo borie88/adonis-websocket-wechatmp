@@ -597,7 +597,6 @@ export default class Connection extends Emitter {
     this.ws.onError((event) => this._onError(event))
     this.ws.onOpen((event) => this._onOpen(event))
     this.ws.onMessage((event) => this._onMessage(event))
-    console.log(this.ws, url)
 
     return this
   }
@@ -614,7 +613,7 @@ export default class Connection extends Emitter {
   write (payload) {
     if (this.ws.readyState !== this.ws.OPEN) {
       if (this.options.env !== 'production') {
-        console.log('connection is not in open state, current state %s', this.ws.readyState)
+        console.log(`connection is not in open state, current state ${this.ws.readyState}`)
       }
       return
     }

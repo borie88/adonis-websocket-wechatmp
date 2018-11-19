@@ -233,7 +233,7 @@ export default class Socket {
   close () {
     this.state = 'closing'
     // if (process.env.NODE_ENV !== 'production') {
-      console.log(`closing subscription for ${this.topic} topic with server`)
+      // console.log(`closing subscription for ${this.topic} topic with server`)
     // }
     this.connection.sendPacket(wsp.leavePacket(this.topic))
   }

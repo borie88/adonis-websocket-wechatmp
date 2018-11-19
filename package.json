@@ -2,8 +2,6 @@
   "name": "adonis-websocket-wechatmp",
   "version": "0.0.1",
   "description": "WeChat Mini Program Websocket client for AdonisJs",
-  "main": "dist/Ws.es.js",
-  "module": "dist/Ws.es.js",
   "scripts": {},
   "keywords": [
     "websocket",

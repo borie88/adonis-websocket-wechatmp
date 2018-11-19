@@ -1,8 +1,10 @@
 'use strict'
 
 /**
- * adonis-websocket-client
- *
+ * adonis-websocket-wechatmp
+ * George Borrelli
+ * 
+ * Forked from adonis-websocket-client
  * (c) Harminder Virk <virk@adonisjs.com>
  *
  * For the full copyright and license information, please view the LICENSE
@@ -12,17 +14,9 @@
 import Emitter from 'emittery'
 import { stringify } from 'query-string'
 import wsp from '@adonisjs/websocket-packet'
-import debug from '../Debug/index.js'
 import Socket from '../Socket/index.js'
 import JsonEncoder from '../JsonEncoder/index.js'
-
-/**
- * Returns the ws protocol based upon HTTP or HTTPS
- *
- * @returns {String}
- *
- */
-const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
+import btoa from 'btoa'
 
 /**
  * Connection class is used to make a TCP/Socket connection
@@ -38,8 +32,6 @@ export default class Connection extends Emitter {
   constructor (url, options) {
     super()
 
-    url = url || `${wsProtocol}://${window.location.host}`
-
     /**
      * Connection options
      *
@@ -51,11 +43,12 @@ export default class Connection extends Emitter {
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
       query: null,
-      encoder: JsonEncoder
+      encoder: JsonEncoder,
+      env: 'development'
     }, options)
 
-    if (process.env.NODE_ENV !== 'production') {
-      debug('connection options %o', this.options)
+    if (this.options.env !== 'production') {
+      console.log('connection options %o', this.options)
     }
 
     /**
@@ -186,8 +179,8 @@ export default class Connection extends Emitter {
     const socket = this.getSubscription(packet.d.topic)
 
     if (!socket) {
-      if (process.env.NODE_ENV !== 'production') {
-        debug('cannot consume packet since %s topic has no active subscription %j', packet.d.topic, packet)
+      if (this.options.env !== 'production') {
+        console.log('cannot consume packet since %s topic has no active subscription %j', packet.d.topic, packet)
       }
       return
     }
@@ -218,8 +211,8 @@ export default class Connection extends Emitter {
 
     this.options.encoder.encode(this._packetsQueue.shift(), (error, payload) => {
       if (error) {
-        if (process.env.NODE_ENV !== 'production') {
-          debug('encode error %j', error)
+        if (this.options.env !== 'production') {
+          console.log('encode error %j', error)
         }
         return
       }
@@ -247,8 +240,8 @@ export default class Connection extends Emitter {
    * @private
    */
   _onOpen () {
-    if (process.env.NODE_ENV !== 'production') {
-      debug('opened')
+    if (this.options.env !== 'production') {
+      console.log('opened')
     }
   }
 
@@ -264,8 +257,8 @@ export default class Connection extends Emitter {
    * @private
    */
   _onError (event) {
-    if (process.env.NODE_ENV !== 'production') {
-      debug('error %O', event)
+    if (this.options.env !== 'production') {
+      console.log('error %O', event)
     }
 
     this._subscriptionsIterator((subscription) => (subscription.serverError()))
@@ -305,8 +298,8 @@ export default class Connection extends Emitter {
    * @private
    */
   _onClose (event) {
-    if (process.env.NODE_ENV !== 'production') {
-      debug('closing from %s state', this._connectionState)
+    if (this.options.env !== 'production') {
+      console.log('closing from %s state', this._connectionState)
     }
 
     this._cleanup()
@@ -340,8 +333,8 @@ export default class Connection extends Emitter {
   _onMessage (event) {
     this.options.encoder.decode(event.data, (decodeError, packet) => {
       if (decodeError) {
-        if (process.env.NODE_ENV !== 'production') {
-          debug('packet dropped, decode error %o', decodeError)
+        if (this.options.env !== 'production') {
+          console.log('packet dropped, decode error %o', decodeError)
         }
         return
       }
@@ -362,70 +355,70 @@ export default class Connection extends Emitter {
    */
   _handleMessage (packet) {
     if (wsp.isOpenPacket(packet)) {
-      if (process.env.NODE_ENV !== 'production') {
-        debug('open packet')
+      if (this.options.env !== 'production') {
+        console.log('open packet')
       }
       this._handleOpen(packet)
       return
     }
 
     if (wsp.isJoinAckPacket(packet)) {
-      if (process.env.NODE_ENV !== 'production') {
-        debug('join ack packet')
+      if (this.options.env !== 'production') {
+        console.log('join ack packet')
       }
       this._handleJoinAck(packet)
       return
     }
 
     if (wsp.isJoinErrorPacket(packet)) {
-      if (process.env.NODE_ENV !== 'production') {
-        debug('join error packet')
+      if (this.options.env !== 'production') {
+        console.log('join error packet')
       }
       this._handleJoinError(packet)
       return
     }
 
     if (wsp.isLeaveAckPacket(packet)) {
-      if (process.env.NODE_ENV !== 'production') {
-        debug('leave ack packet')
+      if (this.options.env !== 'production') {
+        console.log('leave ack packet')
       }
       this._handleLeaveAck(packet)
       return
     }
 
     if (wsp.isLeaveErrorPacket(packet)) {
-      if (process.env.NODE_ENV !== 'production') {
-        debug('leave error packet')
+      if (this.options.env !== 'production') {
+        console.log('leave error packet')
       }
       this._handleLeaveError(packet)
       return
     }
 
     if (wsp.isLeavePacket(packet)) {
-      if (process.env.NODE_ENV !== 'production') {
-        debug('leave packet')
+      if (this.options.env !== 'production') {
+        console.log('leave packet')
       }
       this._handleServerLeave(packet)
       return
     }
 
     if (wsp.isEventPacket(packet)) {
-      if (process.env.NODE_ENV !== 'production') {
-        debug('event packet')
+      if (this.options.env !== 'production') {
+        console.log('event packet')
       }
       this._handleEvent(packet)
       return
     }
 
     if (wsp.isPongPacket(packet)) {
-      if (process.env.NODE_ENV !== 'production') {
-        debug('pong packet')
+      if (this.options.env !== 'production') {
+        console.log('pong packet')
       }
       return
     }
 
-    if (process.env.NODE_ENV !== 'production') {
-      debug('invalid packet type %d', packet.t)
+    if (this.options.env !== 'production') {
+      console.log('invalid packet type %d', packet.t)
     }
   }
 
@@ -456,8 +449,8 @@ export default class Connection extends Emitter {
     /**
      * Sending packets to make pending subscriptions
      */
-    if (process.env.NODE_ENV !== 'production') {
-      debug('processing pre connection subscriptions %o', Object.keys(this.subscriptions))
+    if (this.options.env !== 'production') {
+      console.log('processing pre connection subscriptions %o', Object.keys(this.subscriptions))
     }
 
     this._subscriptionsIterator((subscription) => {
@@ -567,8 +560,8 @@ export default class Connection extends Emitter {
    * @private
    */
   _sendSubscriptionPacket (topic) {
-    if (process.env.NODE_ENV !== 'production') {
-      debug('initiating subscription for %s topic with server', topic)
+    if (this.options.env !== 'production') {
+      console.log('initiating subscription for %s topic with server', topic)
     }
     this.sendPacket(wsp.joinPacket(topic))
   }
@@ -584,15 +577,26 @@ export default class Connection extends Emitter {
     const query = stringify(Object.assign({}, this.options.query, this._extendedQuery))
     const url = query ? `${this._url}?${query}` : this._url
 
-    if (process.env.NODE_ENV !== 'production') {
-      debug('creating socket connection on %s url', url)
+    if (this.options.env !== 'production') {
+      console.log('creating socket connection on %s url', url)
     }
 
-    this.ws = new window.WebSocket(url)
-    this.ws.onclose = (event) => this._onClose(event)
-    this.ws.onerror = (event) => this._onError(event)
-    this.ws.onopen = (event) => this._onOpen(event)
-    this.ws.onmessage = (event) => this._onMessage(event)
+    // Legacy WS implementation
+    // this.ws = wx.connectSocket({
+    //   url,
+    //   // header: {"Authorization": ""} // This fixes WeChat's error on iPhone devices that has test data in the header. They probably still haven't fixed it.
+    // })
+    // wx.onSocketClose((event) => this._onClose(event))
+    // wx.onSocketError((event) => this._onError(event))
+    // wx.onSocketOpen((event) => this._onOpen(event))
+    // wx.onSocketMessage((event) => this._onMessage(event))
+
+    // The new WeChat Websocket implementation >=1.7.0
+    this.ws = wx.connectSocket({ url })
+    this.ws.onClose = (event) => this._onClose(event)
+    this.ws.onError = (event) => this._onError(event)
+    this.ws.onOpen = (event) => this._onOpen(event)
+    this.ws.onMessage = (event) => this._onMessage(event)
 
     return this
   }
@@ -607,14 +611,15 @@ export default class Connection extends Emitter {
    * @return {void}
    */
   write (payload) {
-    if (this.ws.readyState !== window.WebSocket.OPEN) {
-      if (process.env.NODE_ENV !== 'production') {
-        debug('connection is not in open state, current state %s', this.ws.readyState)
-      }
-      return
-    }
+    // Not supported in Mini Programs
+    // if (this.ws.readyState !== window.WebSocket.OPEN) {
+    //   if (this.options.env !== 'production') {
+    //     console.log('connection is not in open state, current state %s', this.ws.readyState)
+    //   }
+    //   return
+    // }
 
-    this.ws.send(payload)
+    this.ws.send({ data: payload })
   }
 
   /**
@@ -735,8 +740,8 @@ export default class Connection extends Emitter {
       throw new Error(`Cannot emit since subscription socket is in ${this.state} state`)
     }
 
-    if (process.env.NODE_ENV !== 'production') {
-      debug('sending event on %s topic', topic)
+    if (this.options.env !== 'production') {
+      console.log('sending event on %s topic', topic)
     }
 
     this.sendPacket(wsp.eventPacket(topic, event, data))
@@ -767,7 +772,7 @@ export default class Connection extends Emitter {
    * @chainable
    */
   withBasicAuth (username, password) {
-    this._extendedQuery.basic = window.btoa(`${username}:${password}`)
+    this._extendedQuery.basic = btoa(`${username}:${password}`)
     return this
   }
 

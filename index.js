@@ -1,8 +1,10 @@
 'use strict'
 
 /**
- * adonis-websocket-client
- *
+ * adonis-websocket-wechatmp
+ * George Borrelli
+ * 
+ * Forked from adonis-websocket-client
  * (c) Harminder Virk <virk@adonisjs.com>
  *
  * For the full copyright and license information, please view the LICENSE

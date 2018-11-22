@@ -1,6 +1,6 @@
 {
   "name": "adonis-websocket-wechatmp",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "WeChat Mini Program Websocket client for AdonisJs",
   "main": "dist/index.js",
   "scripts": {
@@ -24,12 +24,11 @@
   "devDependencies": {
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-node-resolve": "^3.4.0",
-    "rollup-plugin-nodent": "^0.2.2"
-  },
-  "dependencies": {
+    "rollup-plugin-nodent": "^0.2.2",
     "@adonisjs/websocket-packet": "^1.0.6",
     "btoa": "^1.2.1",
     "emittery": "^0.4.0",
     "query-string": "^6.0.0"
-  }
+  },
+  "dependencies": {}
 }
